@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAALX - Link Preview Tool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>KAALX</h1>
+            <p>Link Preview & Security Analysis Tool</p>
+        </header>
+        <div class="preview-container">
+            <input type="text" id="url-input" class="url-input" placeholder="Enter URL to preview and analyze..." autocomplete="off">
+            <button id="preview-btn" class="preview-btn">Preview Link</button>
+            <div id="preview-result" class="preview-result hidden">
+                <h4 id="result-title"></h4>
+                <p id="result-url"></p>
+                <p id="result-domain"></p>
+                <ul id="warnings" class="warning-list"></ul>
+            </div>
+        </div>
+        <div class="navigation">
+            <a href="/" class="nav-button">Back to Chat</a>
+            <a href="/tools" class="nav-button">View Tools</a>
+            <a href="/quiz" class="nav-button">Take Quiz</a>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlInput = document.getElementById('url-input');
+            const previewBtn = document.getElementById('preview-btn');
+            const previewResult = document.getElementById('preview-result');
+            const resultTitle = document.getElementById('result-title');
+            const resultUrl = document.getElementById('result-url');
+            const resultDomain = document.getElementById('result-domain');
+            const warningsList = document.getElementById('warnings');
+
+            previewBtn.addEventListener('click', function() {
+                const url = urlInput.value.trim();
+                if (!url) {
+                    alert('Please enter a URL');
+                    return;
+                }
+
+                fetch('/api/preview-link', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    previewResult.classList.remove('hidden', 'safe-url', 'dangerous-url');
+
+                    if (data.error) {
+                        resultTitle.textContent = 'Error';
+                        resultTitle.style.color = '#ff6b6b';
+                        resultUrl.textContent = data.error;
+                        resultDomain.textContent = '';
+                        warningsList.innerHTML = '';
+                        return;
+                    }
+
+                    resultUrl.textContent = `URL: ${data.url}`;
+                    resultDomain.textContent = `Domain: ${data.domain}`;
+
+                    if (data.safe) {
+                        resultTitle.textContent = '✅ Safe Link';
+                        resultTitle.style.color = '#00d4ff';
+                        previewResult.classList.add('safe-url');
+                    } else {
+                        resultTitle.textContent = '⚠️ Potentially Dangerous';
+                        resultTitle.style.color = '#ff6b6b';
+                        previewResult.classList.add('dangerous-url');
+                    }
+
+                    warningsList.innerHTML = '';
+                    if (data.warnings && data.warnings.length > 0) {
+                        data.warnings.forEach(warning => {
+                            const li = document.createElement('li');
+                            li.textContent = warning;
+                            warningsList.appendChild(li);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error previewing link. Please try again.');
+                });
+            });
+
+            urlInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    previewBtn.click();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

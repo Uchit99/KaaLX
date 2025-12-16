@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAALX - Cyber Safety Quiz</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>KAALX</h1>
+            <p>Cyber Safety Quiz</p>
+        </header>
+        <div class="quiz-container">
+            <div id="quiz-content">
+                <div class="question-card">
+                    <h3 id="question-text">{{ question.question }}</h3>
+                    <div class="options" id="options">
+                        {% for i in range(question.options|length) %}
+                        <button class="option-btn" data-answer="{{ i }}">{{ question.options[i] }}</button>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div id="result" class="result hidden">
+                    <h4 id="result-title"></h4>
+                    <p id="result-explanation"></p>
+                    <button id="next-question" class="nav-button">Next Question</button>
+                </div>
+            </div>
+            <div class="navigation">
+                <a href="/" class="nav-button">Back to Chat</a>
+                <a href="/tools" class="nav-button">View Tools</a>
+                <a href="/link-preview" class="nav-button">Link Preview</a>
+            </div>
+        </div>
+    </div>
+    <script>
+        let currentQuestion = {{ question|tojson }};
+        let questionIndex = {{ question_index }};
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const optionButtons = document.querySelectorAll('.option-btn');
+            const resultDiv = document.getElementById('result');
+            const resultTitle = document.getElementById('result-title');
+            const resultExplanation = document.getElementById('result-explanation');
+            const nextButton = document.getElementById('next-question');
+
+            optionButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const selectedAnswer = parseInt(this.dataset.answer);
+                    checkAnswer(selectedAnswer);
+                });
+            });
+
+            nextButton.addEventListener('click', function() {
+                window.location.reload(); // Refresh for new random question
+            });
+
+            function checkAnswer(selectedAnswer) {
+                fetch('/api/quiz-answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question_index: questionIndex,
+                        answer: selectedAnswer
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.querySelector('.question-card').style.display = 'none';
+                    resultDiv.classList.remove('hidden');
+
+                    if (data.correct) {
+                        resultTitle.textContent = 'Correct! 🎉';
+                        resultTitle.style.color = '#00d4ff';
+                    } else {
+                        resultTitle.textContent = 'Incorrect ❌';
+                        resultTitle.style.color = '#ff6b6b';
+                        resultTitle.innerHTML += `<br>Correct answer: ${data.correct_answer}`;
+                    }
+
+                    resultExplanation.textContent = data.explanation;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error checking answer. Please try again.');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

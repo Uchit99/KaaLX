@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAALX - Cybersecurity Tools</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>KAALX</h1>
+            <p>Cybersecurity Tools Collection</p>
+        </header>
+        <div class="tools-container">
+            <div class="tools-grid">
+                {% for tool in tools %}
+                <div class="tool-card">
+                    <p>{{ tool }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="navigation">
+                <a href="/" class="nav-button">Back to Chat</a>
+                <a href="/quiz" class="nav-button">Take Quiz</a>
+                <a href="/link-preview" class="nav-button">Link Preview</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
